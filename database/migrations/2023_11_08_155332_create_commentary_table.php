@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('commentary', function (Blueprint $table) {
             $table->uuid('c_id')->primary();
             $table->string('c_comment',60);
-            $table->integer('User_u_id')->index();
+            $table->unsignedBigInteger('User_u_id')->index();
             $table->uuid('Event_e_id')->index();
             $table->timestamp('created_at')->useCurrent();
 
