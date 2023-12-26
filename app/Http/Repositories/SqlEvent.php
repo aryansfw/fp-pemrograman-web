@@ -24,7 +24,8 @@ class SqlEvent{
     }
     
     public function deleteEvent(string $id){
-        DB::table('events')->where('e_id', '=', $id)->delete();
+        DB::table('user_events')->where('Event_e_id', $id)->delete();
+        DB::table('events')->where('e_id', $id)->delete();
     }
 
     public function findEvent(string $search){
@@ -45,7 +46,7 @@ class SqlEvent{
 
     public function getEventInGroup(string $groupId){
         $results = DB::table('events')
-        ->select('e_name','e_place', 'e_date', 'e_image', 'g_name', 'e_date')
+        ->select('e_id', 'e_name', 'e_description', 'e_place', 'e_date', 'e_image', 'g_name', 'e_date')
         ->join('groups', 'events.Group_g_uuid', '=', 'groups.g_id')
         ->where('Group_g_uuid', $groupId)
         ->get();

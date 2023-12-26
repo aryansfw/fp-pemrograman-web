@@ -29,9 +29,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['au
 Route::get('/eventdetail', function () {
     return view('eventdetail');
 });
-//todo 
-//add get event by group id
-//add change routing to {{group_id}}
+
 Route::middleware('auth')->group(function () {
     Route::get('/group', [GroupController::class, 'GetGroup'])->name('group.getgroup');
     Route::post('/group', [GroupController::class, 'SearchGroup'])->name('group.search');

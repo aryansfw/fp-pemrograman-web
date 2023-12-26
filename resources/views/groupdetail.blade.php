@@ -135,17 +135,73 @@
                             </div>
                             <div class="col-md-8">
                                 <div class="card-body">
-                                    <h5 class="card-title"><a class="link-dark link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover" href="#">{{ $event->e_name }}</a></h5>
+                                    <h5 class="card-title"><a class="link-dark link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover" href="{{ route('event.geteventdetail', ['group_id' => $results->g_id, 'event_id' => $event->e_id]) }}"">{{ $event->e_name }}</a></h5>
                                     <p class="card-text">Hosted by: {{ $event->g_name }}</p>
                                     <p><i class="bi bi-calendar4-event"></i> {{ \Carbon\Carbon::parse($event->e_date)->format('l, d M Y - H:i A') }}</p>
                                     <h6><i class="bi bi-ticket-perforated"></i> FREE</h6>
                                     <div class="position-absolute bottom-0 end-0 mb-3 me-3">
                                         @if($user_status === 3 || $user_status == null)
-                                        <button href="#" class="btn btn-primary" style="color:white;">Join Event</button>
+                                        <a href="{{ route('event.joinevent', ['group_id' => $results->g_id, 'event_id' => $event->e_id]) }}" class="btn btn-primary" style="color:white;" role="button">Join Event</a>
                                         @else
-                                        {{-- <button href="#" class="btn btn-primary" style="color:white;">Edit Event</button>
-                                        <button href="#" class="btn btn-danger" style="color:white">Hapus Event</button> --}}
+                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editEvent" style="color:white;">Edit Event</button>
+                                        <form method="post" action="{{ route('event.delete', ['group_id' => $results->g_id, 'event_id' => $event->e_id])}}"  class="btn btn-danger" style="color:white" >
+                                            @csrf
+                                            @method('delete')
+                                            <button type="submit">Hapus Event</button>
+                                        </form>
                                         @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal fade" id="editEvent" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="staticBackdropLabel">Edit Event</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form method="post" action="{{ route('event.update', ['group_id' => $results->g_id, 'event_id' => $event->e_id]) }}" enctype="multipart/form-data">
+                                            @csrf
+                                            @method('PATCH')
+                                            
+                                            <input type="hidden" name="e_image_original" value="{{ $event->e_image}}" />
+                                            <div class="mb-3">
+                                                <label for="e_name" class="form-label">Nama Event</label>
+                                                <input type="text" class="form-control rounded custom-border" id="e_name" name="e_name" value="{{ $event->e_name }}" required>
+                                            </div>
+            
+                                            <div class="mb-3">
+                                                <label for="e_description" class="form-label">Deskripsi Event</label>
+                                                <textarea class="form-control" id="e_description" name="e_description" rows="4" required>{{ $event->e_description }}</textarea>
+                                            </div>
+            
+                                            <div class="mb-3">
+                                                <label for="e_place" class="form-label">Tempat atau Lokasi Event</label>
+                                                <input type="text" class="form-control rounded custom-border" id="e_place" name="e_place" value="{{ $event->e_place }}" required>
+                                            </div>
+            
+                                            <div class="mb-3">
+                                                <label for="e_image" class="form-label">Poster Event (Opsional)</label>
+                                                <input type="file" class="form-control rounded custom-border custom-height" id="e_image" name="e_image" accept="image/*">
+            
+                                            </div>
+            
+                                            <div class="mb-3">
+                                                <label for="e_date" class="form-label">Tanggal Pelaksanaan Event</label>
+                                                <input type="date" class="form-control rounded custom-border" id="e_date" name="e_date" value="{{ (new DateTime($event->e_date))->format('Y-m-d') }}" required>
+                                            </div>
+
+                                            <div class="d-grid gap-2 col-6 mx-auto">
+                                                <button class="btn btn-primary edit-btn">Simpan Perubahan</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary mod-btn-exit" data-bs-dismiss="modal">Batal</button>
                                     </div>
                                 </div>
                             </div>
@@ -157,54 +213,7 @@
                 @endif
             </div>
             <!-- Modal for Editing Event-->
-            <div class="modal fade" id="editEvent" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h1 class="modal-title fs-5" id="staticBackdropLabel">Edit Event</h1>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal">
-                                <i class="bi bi-x-lg"></i>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <form action="{{ route('event.store', ['group_id' => $group_id]) }}" method="post" enctype="multipart/form-data">
-                                @csrf
-                                <div class="mb-3">
-                                    <label for="e_name" class="form-label">Nama Event</label>
-                                    <input type="text" class="form-control rounded custom-border" id="e_name" name="e_name" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="e_description" class="form-label">Deskripsi Event</label>
-                                    <textarea class="form-control" id="e_description" name="e_description" rows="4" required></textarea>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="e_place" class="form-label">Tempat atau Lokasi Event</label>
-                                    <input type="text" class="form-control rounded custom-border" id="e_place" name="e_place" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="e_image" class="form-label">Poster Event</label>
-                                    <input type="file" class="form-control rounded custom-border custom-height" id="e_image" name="e_image" accept="image/*" required>
-
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="e_date" class="form-label">Tanggal Pelaksanaan Event</label>
-                                    <input type="date" class="form-control rounded custom-border" id="e_date" name="e_date" required>
-                                </div>
-                                <div class="d-grid gap-2 col-6 mx-auto">
-                                    <button type="submit" class="btn btn-primary edit-btn">Simpan Perubahan</button>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary mod-btn-exit" data-bs-dismiss="modal">Batal</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            
         </div>
         <br><br><br><br>
     </div>

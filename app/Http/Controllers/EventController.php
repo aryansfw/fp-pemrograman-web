@@ -40,11 +40,9 @@ class EventController extends Controller
         $uid = Auth::user()->id;
         $data = $getGroupPermisionService->execute($uid, $group_id);
         if(!isset($data->role)){
-            dd('bjir gagal');
             return redirect()->route('event.eventindex',['status'=>'anda tidak memiliki akses untuk membuat event', 'group_id'=>$group_id]);
         }
         if($data->role == 3){
-            dd('bjir gagal');
             return redirect()->route('event.eventindex',['status'=>'andat tidak memiliki akses untuk membuat event', 'group_id'=>$group_id]);
         }
         else{
@@ -83,28 +81,35 @@ class EventController extends Controller
         return view('event',['results'=>$results]);
 
     }
-    public function UpdateEvent(string $event_id, CreateEventService $createEventService, GetGroupPermisionService $getGroupPermisionService, Request $request){
+    public function UpdateEvent(string $group_id, string $event_id, CreateEventService $createEventService, GetGroupPermisionService $getGroupPermisionService, Request $request){
         $request->validate([
             'e_name'        => 'required|string|max:255',
             'e_description' => 'required|string',
             'e_place'       => 'required|string|max:255',
-            'e_image'       => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'e_image'       => 'image|mimes:jpeg,png,jpg,gif|max:2048',
             'e_date'        => 'required|date',
         ]);
         $uid = Auth::user()->id;
-        $data = $getGroupPermisionService->execute($uid, $request->input('group_id'));
-        if(!isset($data->Group_Role_gr_id)){
-            return redirect()->route('createevent',['status'=>'anda tidak memiliki akses untuk membuat event']);
+        $data = $getGroupPermisionService->execute($uid, $group_id);
+
+        if(!isset($data->ug_id)){
+            return view('createevent', ['status'=>'anda tidak memiliki akses untuk membuat event']);
         }
-        if($data->Group_Role_gr_id == 3){
-            return redirect()->route('createevent',['status'=>'andat tidak memiliki akses untuk membuat event']);
+        if($data->role == 3){
+            return view('createevent', ['status'=>'anda tidak memiliki akses untuk membuat event']);
         }
         else{
             $ug_id = $data->ug_id;
         }
+        $imagePath = "";
+        if ($request->e_image != null) {
+            $imageName = time() . '_' . $request->file('e_image')->getClientOriginalName();
+            $imagePath = $request->file('e_image')->storeAs('/public/eventimages', $imageName);
+            $imagePath = '/'.$imagePath;
+        } else {
+            $imagePath = $request->input('e_image_original');
+        }
 
-        $imageName = time() . '_' . $request->file('e_image')->getClientOriginalName();
-        $imagePath = $request->file('e_image')->storeAs('/public/eventimages', $imageName);
         $event = new Event(
             $event_id,
             $request->input('e_name'),
@@ -112,7 +117,7 @@ class EventController extends Controller
             $request->input('e_place'),
             $imagePath,
             $request->input('e_date'),
-            $request->input('group_id'),
+            $group_id,
             $ug_id,
         );
         
@@ -125,10 +130,10 @@ class EventController extends Controller
             throw $e;
         }
         DB::commit();
-        dd('success');
-        return redirect()->route('eventindex',['status'=>'success membuat event']);
+
+        return redirect()->route('group.getgroupbyid', ['group_id' => $group_id]);
     }
-    public function DeleteEvent(string $event_id, DeleteEventService $deleteEventService){
+    public function DeleteEvent(string $group_id, string $event_id, DeleteEventService $deleteEventService){
         DB::beginTransaction();
         try{
             $deleteEventService->execute($event_id);
@@ -137,7 +142,9 @@ class EventController extends Controller
             DB::rollback();
             throw $e;
         }
-        dd('success delete event');
+        DB::commit();
+        
+        return redirect()->route('group.getgroupbyid', ['group_id' => $group_id]);
     }
 
     public function getEventByUserID(GetEventByUserIDService $getEventByUserIDService){
